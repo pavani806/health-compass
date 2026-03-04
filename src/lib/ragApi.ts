@@ -1,11 +1,11 @@
-import { RAGQueryResponse, TriageResult, RiskLevel, Recommendation } from "@/types/triage";
+import { RAGQueryResponse, TriageResult, RiskLevel, Recommendation, Language, PatientInfo } from "@/types/triage";
 
-const RAG_API_URL = "http://localhost:8800/v1/query";
+const RAG_API_URL = "http://localhost:8000/v1/query";
 
-function severityToRiskLevel(score: number): RiskLevel {
-    if (score <= 5) return "Low";
-    if (score <= 12) return "Moderate";
-    if (score <= 20) return "High";
+function severityToRiskLevel(pct: number): RiskLevel {
+    if (pct <= 25) return "Low";
+    if (pct <= 50) return "Moderate";
+    if (pct <= 75) return "High";
     return "Critical";
 }
 
@@ -35,14 +35,19 @@ function recommendationDetails(level: RiskLevel, disease: string): string {
     }
 }
 
-export async function queryRAGApi(symptoms: string): Promise<TriageResult> {
+export async function queryRAGApi(symptoms: string, language: Language = "en", patient?: PatientInfo): Promise<TriageResult> {
     const response = await fetch(RAG_API_URL, {
         method: "POST",
         headers: {
             "accept": "application/json",
             "Content-Type": "application/json",
         },
-        body: JSON.stringify({ symptoms, top_k: 3 }),
+        body: JSON.stringify({
+            symptoms,
+            top_k: 3,
+            age: patient?.age || undefined,
+            gender: patient?.gender || undefined,
+        }),
     });
 
     if (!response.ok) {
@@ -50,7 +55,7 @@ export async function queryRAGApi(symptoms: string): Promise<TriageResult> {
     }
 
     const data: RAGQueryResponse = await response.json();
-    const riskLevel = severityToRiskLevel(data.severity_score);
+    const riskLevel = severityToRiskLevel(data.severity.percentage);
     const recommendation = riskLevelToRecommendation(riskLevel);
     const primary = data.results[0];
     const secondary = data.results[1];
@@ -62,18 +67,21 @@ export async function queryRAGApi(symptoms: string): Promise<TriageResult> {
             r.probability >= 0.4 ? "High" : r.probability >= 0.2 ? "Medium" : ("Low" as "Low" | "Medium" | "High"),
     }));
 
+    // Build localized immediate_actions from primary precautions
+    const immediateActions = primary?.precautions.map((p) => p[language]) ?? [];
+
     return {
-        risk_score: Math.min(Math.round((data.severity_score / 30) * 100), 100),
+        risk_score: Math.round(data.severity.percentage),
         risk_level: riskLevel,
         possible_conditions: possibleConditions,
         recommendation,
         recommendation_details: recommendationDetails(riskLevel, primary?.disease ?? "the condition"),
-        explanation: `Based on your ${data.parsed_symptoms.length} reported symptom(s) — ${data.parsed_symptoms.join(", ")} — the severity score is ${data.severity_score}. The most likely diagnosis is ${primary?.disease} with a ${Math.round((primary?.probability ?? 0) * 100)}% probability.`,
-        immediate_actions: primary?.precautions ?? [],
-        // RAG-enriched fields
+        explanation: `Based on your ${data.parsed_symptoms.length} reported symptom(s) — ${data.parsed_symptoms.join(", ")} — the severity score is ${data.severity.score}. The most likely diagnosis is ${primary?.disease} with a ${Math.round((primary?.probability ?? 0) * 100)}% probability.`,
+        immediate_actions: immediateActions,
+        // RAG-enriched fields (full multilingual objects passed through)
         primary_disease: primary,
         secondary_disease: secondary,
-        severity_score: data.severity_score,
+        severity_score: data.severity.score,
         parsed_symptoms: data.parsed_symptoms,
     };
 }

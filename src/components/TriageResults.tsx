@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { TriageResult, Language, UI_TEXT, Recommendation, RAGDiseaseResult } from "@/types/triage";
+import { TriageResult, Language, UI_TEXT, Recommendation, RAGDiseaseResult, RAGPrecaution } from "@/types/triage";
 import { RiskGauge } from "./RiskGauge";
 import { EmergencySection } from "./EmergencySection";
 import {
@@ -55,7 +55,7 @@ function ProbabilityBadge({ value }: { value: number }) {
   );
 }
 
-function PrecautionList({ precautions }: { precautions: string[] }) {
+function PrecautionList({ precautions, language }: { precautions: RAGPrecaution[]; language: Language }) {
   return (
     <ul className="space-y-2 mt-3">
       {precautions.map((p, i) => (
@@ -64,7 +64,7 @@ function PrecautionList({ precautions }: { precautions: string[] }) {
           className="flex items-start gap-2.5 text-sm text-muted-foreground"
         >
           <CheckCircle2 className="w-4 h-4 mt-0.5 text-primary shrink-0" />
-          <span className="capitalize leading-relaxed">{p}</span>
+          <span className="capitalize leading-relaxed">{p[language]}</span>
         </li>
       ))}
     </ul>
@@ -74,15 +74,18 @@ function PrecautionList({ precautions }: { precautions: string[] }) {
 function DiseaseCard({
   disease,
   isPrimary,
+  language,
 }: {
   disease: RAGDiseaseResult;
   isPrimary: boolean;
+  language: Language;
 }) {
+  const summary = disease.summary?.[language];
   return (
     <div
       className={`rounded-xl border p-5 space-y-1 ${isPrimary
-          ? "border-primary/30 bg-primary/5 shadow-sm"
-          : "border-border bg-card shadow-card"
+        ? "border-primary/30 bg-primary/5 shadow-sm"
+        : "border-border bg-card shadow-card"
         }`}
     >
       {/* Header */}
@@ -116,6 +119,11 @@ function DiseaseCard({
         <ProbabilityBadge value={disease.probability} />
       </div>
 
+      {/* Summary */}
+      {summary && (
+        <p className="text-sm text-muted-foreground leading-relaxed pt-1">{summary}</p>
+      )}
+
       {/* Divider */}
       <div className="border-t border-border pt-3">
         <div className="flex items-center gap-1.5 mb-1">
@@ -124,7 +132,7 @@ function DiseaseCard({
             Recommended Precautions
           </p>
         </div>
-        <PrecautionList precautions={disease.precautions} />
+        <PrecautionList precautions={disease.precautions} language={language} />
       </div>
     </div>
   );
@@ -205,7 +213,7 @@ export const TriageResults = ({ result, language, onReset }: TriageResultsProps)
       {/* PRIMARY Disease Card */}
       {hasPrimary && (
         <motion.div variants={item}>
-          <DiseaseCard disease={result.primary_disease!} isPrimary={true} />
+          <DiseaseCard disease={result.primary_disease!} isPrimary={true} language={language} />
         </motion.div>
       )}
 
@@ -218,7 +226,7 @@ export const TriageResults = ({ result, language, onReset }: TriageResultsProps)
               Also consider this alternative possibility:
             </p>
           </div>
-          <DiseaseCard disease={result.secondary_disease!} isPrimary={false} />
+          <DiseaseCard disease={result.secondary_disease!} isPrimary={false} language={language} />
         </motion.div>
       )}
 

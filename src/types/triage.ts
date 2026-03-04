@@ -8,17 +8,33 @@ export interface PossibleCondition {
 }
 
 // RAG API types
+export interface LocalizedText {
+  en: string;
+  hi: string;
+  te: string;
+}
+
+export interface RAGPrecaution extends LocalizedText { }
+
 export interface RAGDiseaseResult {
   rank: number;
   disease: string;
   probability: number;
-  precautions: string[];
+  summary: LocalizedText;
+  precautions: RAGPrecaution[];
+}
+
+export interface RAGSeverity {
+  score: number;
+  max_score: number;
+  percentage: number;
+  alert: string | null;
 }
 
 export interface RAGQueryResponse {
   query: string;
   parsed_symptoms: string[];
-  severity_score: number;
+  severity: RAGSeverity;
   results: RAGDiseaseResult[];
 }
 

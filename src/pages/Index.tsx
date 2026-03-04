@@ -5,19 +5,15 @@ import { queryRAGApi } from "@/lib/ragApi";
 import { SymptomChips } from "@/components/SymptomChips";
 import { TriageResults } from "@/components/TriageResults";
 import { LanguageToggle } from "@/components/LanguageToggle";
-import { WelcomePage } from "@/components/WelcomePage";
-import { PatientInfoForm } from "@/components/PatientInfoForm";
 import { VoiceInput } from "@/components/VoiceInput";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Activity, Loader2, ShieldCheck } from "lucide-react";
+import { Activity, Loader2, ShieldCheck, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-
-type Step = "welcome" | "patient" | "symptoms" | "results";
 
 const Index = () => {
   const [language, setLanguage] = useState<Language>("en");
-  const [step, setStep] = useState<Step>("welcome");
+  const [showResults, setShowResults] = useState(false);
   const [symptoms, setSymptoms] = useState("");
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -39,15 +35,21 @@ const Index = () => {
   const handleAnalyze = async () => {
     const allSymptoms = [symptoms, ...selectedChips].filter(Boolean).join(", ");
     if (!allSymptoms.trim()) {
-      toast.error(language === "en" ? "Please describe your symptoms" : language === "hi" ? "कृपया अपने लक्षण बताएं" : "దయచేసి మీ లక్షణాలను వివరించండి");
+      toast.error(
+        language === "en"
+          ? "Please describe your symptoms"
+          : language === "hi"
+            ? "कृपया अपने लक्षण बताएं"
+            : "దయచేసి మీ లక్షణాలను వివరించండి"
+      );
       return;
     }
 
     setIsAnalyzing(true);
     try {
-      const data: TriageResult = await queryRAGApi(allSymptoms);
+      const data: TriageResult = await queryRAGApi(allSymptoms, language, patientInfo);
       setResult(data);
-      setStep("results");
+      setShowResults(true);
     } catch (e) {
       console.error(e);
       toast.error(
@@ -67,7 +69,7 @@ const Index = () => {
     setSymptoms("");
     setSelectedChips([]);
     setPatientInfo({ age: "", gender: "" });
-    setStep("welcome");
+    setShowResults(false);
   };
 
   return (
@@ -91,41 +93,14 @@ const Index = () => {
       {/* Main */}
       <main className="max-w-2xl mx-auto px-4 py-6">
         <AnimatePresence mode="wait">
-          {step === "welcome" && (
-            <motion.div key="welcome" exit={{ opacity: 0, y: -20 }}>
-              <WelcomePage language={language} onStart={() => setStep("patient")} />
-            </motion.div>
-          )}
-
-          {step === "patient" && (
-            <motion.div key="patient" exit={{ opacity: 0, y: -20 }}>
-              <PatientInfoForm
-                language={language}
-                patientInfo={patientInfo}
-                onChange={setPatientInfo}
-                onNext={() => setStep("symptoms")}
-                onBack={() => setStep("welcome")}
-              />
-            </motion.div>
-          )}
-
-          {step === "symptoms" && (
+          {!showResults ? (
             <motion.div
-              key="symptoms"
+              key="form"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               className="space-y-6"
             >
-              {/* Step indicator */}
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <span className="w-8 h-8 rounded-full bg-primary/20 text-primary flex items-center justify-center font-semibold text-xs">✓</span>
-                <div className="w-8 h-0.5 bg-primary" />
-                <span className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-xs">2</span>
-                <div className="w-8 h-0.5 bg-border" />
-                <span className="w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center font-semibold text-xs">3</span>
-              </div>
-
               {/* Hero */}
               <div className="text-center py-4">
                 <motion.div
@@ -140,7 +115,46 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">{t.subtitle}</p>
               </div>
 
-              {/* Voice + Text input */}
+              {/* Patient Info */}
+              <div className="bg-card rounded-xl border border-border p-4 space-y-3">
+                <h3 className="text-sm font-semibold text-foreground">{t.patientInfo}</h3>
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Age */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">{t.age}</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="120"
+                      value={patientInfo.age}
+                      onChange={(e) => setPatientInfo((p) => ({ ...p, age: e.target.value }))}
+                      placeholder={t.agePlaceholder}
+                      className="w-full h-9 px-3 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    />
+                  </div>
+                  {/* Gender */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-muted-foreground">{t.gender}</label>
+                    <select
+                      value={patientInfo.gender}
+                      onChange={(e) =>
+                        setPatientInfo((p) => ({
+                          ...p,
+                          gender: e.target.value as PatientInfo["gender"],
+                        }))
+                      }
+                      className="w-full h-9 px-3 text-sm rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    >
+                      <option value="">{t.selectGender}</option>
+                      <option value="male">{t.male}</option>
+                      <option value="female">{t.female}</option>
+                      <option value="other">{t.other}</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Symptoms Input */}
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <label className="text-sm font-medium text-foreground">{t.inputLabel}</label>
@@ -164,46 +178,51 @@ const Index = () => {
                 />
               </div>
 
-              {/* Buttons */}
-              <div className="flex gap-3">
-                <Button onClick={() => setStep("patient")} variant="outline" className="h-12 px-6 gap-2">
-                  {t.back}
-                </Button>
-                <Button
-                  onClick={handleAnalyze}
-                  disabled={isAnalyzing || (!symptoms.trim() && selectedChips.length === 0)}
-                  className="flex-1 h-12 text-base font-semibold gap-2 hover:scale-[1.01] transition-transform"
-                  size="lg"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      {t.analyzing}
-                    </>
-                  ) : (
-                    <>
-                      <Activity className="w-5 h-5" />
-                      {t.analyze}
-                    </>
-                  )}
-                </Button>
-              </div>
+              {/* Analyze Button */}
+              <Button
+                onClick={handleAnalyze}
+                disabled={isAnalyzing || (!symptoms.trim() && selectedChips.length === 0)}
+                className="w-full h-12 text-base font-semibold gap-2 hover:scale-[1.01] transition-transform"
+                size="lg"
+              >
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    {t.analyzing}
+                  </>
+                ) : (
+                  <>
+                    <Activity className="w-5 h-5" />
+                    {t.analyze}
+                  </>
+                )}
+              </Button>
 
               {/* Disclaimer */}
               <p className="text-[11px] text-muted-foreground text-center leading-relaxed px-4">
                 {t.disclaimer}
               </p>
             </motion.div>
-          )}
-
-          {step === "results" && result && (
+          ) : (
             <motion.div
               key="results"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
+              className="space-y-5"
             >
-              <TriageResults result={result} language={language} onReset={handleReset} />
+              {/* Back to form */}
+              <button
+                onClick={handleReset}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                {t.newAssessment}
+              </button>
+
+              {result && (
+                <TriageResults result={result} language={language} onReset={handleReset} />
+              )}
             </motion.div>
           )}
         </AnimatePresence>
