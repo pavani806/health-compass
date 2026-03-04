@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
 import { Language, TriageResult, UI_TEXT, PatientInfo } from "@/types/triage";
+import { queryRAGApi } from "@/lib/ragApi";
 import { SymptomChips } from "@/components/SymptomChips";
 import { TriageResults } from "@/components/TriageResults";
 import { LanguageToggle } from "@/components/LanguageToggle";
@@ -45,23 +45,17 @@ const Index = () => {
 
     setIsAnalyzing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("analyze-symptoms", {
-        body: { symptoms: allSymptoms, language, age: patientInfo.age, gender: patientInfo.gender },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      setResult(data as TriageResult);
+      const data: TriageResult = await queryRAGApi(allSymptoms);
+      setResult(data);
       setStep("results");
     } catch (e) {
       console.error(e);
       toast.error(
         language === "en"
-          ? "Analysis failed. Please try again."
+          ? "Analysis failed. Please check if the health API server is running."
           : language === "hi"
-          ? "विश्लेषण विफल। कृपया पुनः प्रयास करें।"
-          : "విశ్లేషణ విఫలమైంది. దయచేసి మళ్ళీ ప్రయత్నించండి."
+            ? "विश्लेषण विफल। कृपया जांचें कि API सर्वर चल रहा है।"
+            : "విశ్లేషణ విఫలమైంది. దయచేసి API సర్వర్ నడుస్తోందో తనిఖీ చేయండి."
       );
     } finally {
       setIsAnalyzing(false);

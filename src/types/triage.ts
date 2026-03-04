@@ -7,6 +7,21 @@ export interface PossibleCondition {
   probability: "Low" | "Medium" | "High";
 }
 
+// RAG API types
+export interface RAGDiseaseResult {
+  rank: number;
+  disease: string;
+  probability: number;
+  precautions: string[];
+}
+
+export interface RAGQueryResponse {
+  query: string;
+  parsed_symptoms: string[];
+  severity_score: number;
+  results: RAGDiseaseResult[];
+}
+
 export interface TriageResult {
   risk_score: number;
   risk_level: RiskLevel;
@@ -15,6 +30,11 @@ export interface TriageResult {
   recommendation_details: string;
   explanation: string;
   immediate_actions: string[];
+  // RAG-enriched fields
+  primary_disease?: RAGDiseaseResult;
+  secondary_disease?: RAGDiseaseResult;
+  severity_score?: number;
+  parsed_symptoms?: string[];
 }
 
 export interface PatientInfo {
