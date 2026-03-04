@@ -82,7 +82,7 @@ const Index = () => {
               <ShieldCheck className="w-5 h-5 text-primary-foreground" />
             </div>
             <div>
-              <h1 className="text-sm font-display font-bold text-foreground leading-tight">MedTriage AI</h1>
+              <h1 className="text-sm font-display font-bold text-foreground leading-tight">Kirsal AI</h1>
               <p className="text-[10px] text-muted-foreground leading-tight">{t.tagline}</p>
             </div>
           </div>
