@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { TriageResult, Language, UI_TEXT, Recommendation } from "@/types/triage";
 import { RiskGauge } from "./RiskGauge";
+import { EmergencySection } from "./EmergencySection";
 import { Heart, Phone, Building2, Siren, Info, ArrowRight, RotateCcw } from "lucide-react";
 import { Button } from "./ui/button";
 
@@ -44,6 +45,13 @@ export const TriageResults = ({ result, language, onReset }: TriageResultsProps)
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+      {/* Critical Emergency Section */}
+      {result.risk_level === "Critical" && (
+        <motion.div variants={item}>
+          <EmergencySection language={language} />
+        </motion.div>
+      )}
+
       {/* Risk Gauge */}
       <motion.div variants={item} className="bg-card rounded-xl p-6 shadow-card border border-border">
         <h3 className="text-sm font-medium text-muted-foreground text-center mb-4">{t.riskScore}</h3>
@@ -64,7 +72,7 @@ export const TriageResults = ({ result, language, onReset }: TriageResultsProps)
         <h3 className="font-display font-semibold text-foreground mb-3">{t.possibleConditions}</h3>
         <div className="space-y-2">
           {result.possible_conditions.map((condition, i) => (
-            <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50">
+            <div key={i} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
               <span className="text-sm font-medium text-foreground">{condition.name}</span>
               <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${PROBABILITY_COLOR[condition.probability]}`}>
                 {condition.probability}
@@ -103,7 +111,7 @@ export const TriageResults = ({ result, language, onReset }: TriageResultsProps)
 
       {/* Reset */}
       <motion.div variants={item}>
-        <Button onClick={onReset} variant="outline" className="w-full gap-2">
+        <Button onClick={onReset} variant="outline" className="w-full gap-2 hover:scale-[1.01] transition-transform">
           <RotateCcw className="w-4 h-4" />
           {t.newAssessment}
         </Button>

@@ -5,21 +5,29 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const LANG_INSTRUCTION: Record<string, string> = {
+  en: "Respond entirely in English.",
+  hi: "Respond entirely in Hindi (Devanagari script).",
+  te: "Respond entirely in Telugu (Telugu script).",
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { symptoms, language } = await req.json();
+    const { symptoms, language, age, gender } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
-    const langInstruction = language === "hi"
-      ? "Respond entirely in Hindi (Devanagari script)."
-      : "Respond entirely in English.";
+    const langInstruction = LANG_INSTRUCTION[language] || LANG_INSTRUCTION.en;
+
+    const patientProfile = age || gender
+      ? `\n\nPatient Profile:\nAge: ${age || "Not specified"}\nGender: ${gender || "Not specified"}\n\nConsider age and gender when analyzing symptoms and calculating risk. Adjust recommendations based on age-specific and gender-specific risk factors.`
+      : "";
 
     const systemPrompt = `You are a medical triage AI assistant. You analyze reported symptoms and provide structured risk assessments. You are NOT a doctor and must always recommend professional consultation for moderate+ risks.
 
-${langInstruction}
+${langInstruction}${patientProfile}
 
 Given a list of symptoms, you MUST call the "triage_result" function with your analysis. Consider:
 - Symptom combinations that may indicate serious conditions

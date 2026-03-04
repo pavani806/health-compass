@@ -6,7 +6,7 @@
 
 @layer base {
   :root {
-    --background: 195 20% 97%;
+    --background: 205 100% 97%;
     --foreground: 210 40% 12%;
 
     --card: 0 0% 100%;
@@ -15,24 +15,24 @@
     --popover: 0 0% 100%;
     --popover-foreground: 210 40% 12%;
 
-    --primary: 174 62% 40%;
+    --primary: 205 85% 55%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 195 30% 94%;
+    --secondary: 205 40% 94%;
     --secondary-foreground: 210 40% 12%;
 
-    --muted: 195 20% 95%;
+    --muted: 205 25% 95%;
     --muted-foreground: 210 10% 50%;
 
-    --accent: 174 62% 94%;
-    --accent-foreground: 174 62% 25%;
+    --accent: 205 85% 94%;
+    --accent-foreground: 205 85% 30%;
 
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 195 20% 90%;
-    --input: 195 20% 90%;
-    --ring: 174 62% 40%;
+    --border: 205 25% 90%;
+    --input: 205 25% 90%;
+    --ring: 205 85% 55%;
 
     --radius: 0.75rem;
 
@@ -45,13 +45,13 @@
     --coral: 12 76% 61%;
     --coral-foreground: 0 0% 100%;
 
-    --teal-glow: 174 62% 50%;
+    --primary-glow: 205 85% 65%;
 
     --font-display: 'Space Grotesk', sans-serif;
     --font-body: 'Inter', sans-serif;
 
     --shadow-card: 0 1px 3px 0 hsl(210 40% 12% / 0.04), 0 4px 16px -2px hsl(210 40% 12% / 0.06);
-    --shadow-elevated: 0 4px 24px -4px hsl(174 62% 40% / 0.12), 0 8px 32px -8px hsl(210 40% 12% / 0.08);
+    --shadow-elevated: 0 4px 24px -4px hsl(205 85% 55% / 0.15), 0 8px 32px -8px hsl(210 40% 12% / 0.08);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
@@ -65,24 +65,24 @@
 
   .dark {
     --background: 210 30% 8%;
-    --foreground: 195 20% 95%;
+    --foreground: 205 25% 95%;
     --card: 210 25% 12%;
-    --card-foreground: 195 20% 95%;
+    --card-foreground: 205 25% 95%;
     --popover: 210 25% 12%;
-    --popover-foreground: 195 20% 95%;
-    --primary: 174 62% 45%;
+    --popover-foreground: 205 25% 95%;
+    --primary: 205 85% 55%;
     --primary-foreground: 0 0% 100%;
     --secondary: 210 20% 18%;
-    --secondary-foreground: 195 20% 95%;
+    --secondary-foreground: 205 25% 95%;
     --muted: 210 20% 16%;
-    --muted-foreground: 195 15% 55%;
-    --accent: 174 40% 18%;
-    --accent-foreground: 174 62% 70%;
+    --muted-foreground: 205 15% 55%;
+    --accent: 205 40% 18%;
+    --accent-foreground: 205 85% 70%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 210 20% 20%;
     --input: 210 20% 20%;
-    --ring: 174 62% 45%;
+    --ring: 205 85% 55%;
   }
 }
 
@@ -126,4 +126,24 @@
   .bg-risk-critical {
     background-color: hsl(var(--risk-critical));
   }
+}
+
+/* Gradient blob animations for welcome page */
+@keyframes blob-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  25% { transform: translate(20px, -30px) scale(1.05); }
+  50% { transform: translate(-10px, 15px) scale(0.95); }
+  75% { transform: translate(15px, 10px) scale(1.02); }
+}
+
+.blob {
+  animation: blob-float 8s ease-in-out infinite;
+}
+
+.blob-delay-2 {
+  animation-delay: 2s;
+}
+
+.blob-delay-4 {
+  animation-delay: 4s;
 }
