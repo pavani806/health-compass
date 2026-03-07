@@ -1,6 +1,6 @@
 import { RAGQueryResponse, TriageResult, RiskLevel, Recommendation, Language, PatientInfo } from "@/types/triage";
 
-const RAG_API_URL = "http://localhost:8000/v1/query";
+const RAG_API_URL = "https://the-paradise-y9ud.onrender.com/v1/query";
 
 function severityToRiskLevel(pct: number): RiskLevel {
     if (pct <= 25) return "Low";
